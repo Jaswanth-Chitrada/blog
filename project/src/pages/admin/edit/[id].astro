@@ -1,0 +1,109 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { verifyToken } from '../../../lib/auth';
+import { storage } from '../../../lib/storage';
+import { Editor } from '../../../components/Editor';
+
+const token = Astro.cookies.get('token')?.value;
+const isAuthenticated = token && await verifyToken(token);
+
+if (!isAuthenticated) {
+  return Astro.redirect('/admin/login');
+}
+
+const { id } = Astro.params;
+const post = await storage.getPost(id || '');
+
+if (!post) {
+  return Astro.redirect('/admin');
+}
+---
+
+<Layout title="Edit Post - VLSI Engineering Blog">
+  <main class="max-w-4xl mx-auto px-4 py-8">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+        Edit Post
+      </h1>
+      <form action={`/api/posts/${post.id}`} method="POST" class="space-y-6">
+        <input type="hidden" name="_method" value="PUT" />
+        
+        <div>
+          <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Title
+          </label>
+          <input
+            type="text"
+            id="title"
+            name="title"
+            value={post.title}
+            required
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+          />
+        </div>
+        
+        <div>
+          <label for="excerpt" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Excerpt
+          </label>
+          <textarea
+            id="excerpt"
+            name="excerpt"
+            rows="3"
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+          >{post.excerpt}</textarea>
+        </div>
+
+        <div>
+          <label for="image" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Image
+          </label>
+          <div class="mt-1 flex items-center space-x-4">
+            <input
+              type="file"
+              id="image"
+              name="image"
+              accept="image/*"
+              class="block w-full text-sm text-gray-500 dark:text-gray-300
+                file:mr-4 file:py-2 file:px-4
+                file:rounded-md file:border-0
+                file:text-sm file:font-semibold
+                file:bg-purple-50 file:text-purple-700
+                hover:file:bg-purple-100
+                dark:file:bg-purple-900 dark:file:text-purple-200"
+            />
+            {post.image && (
+              <img
+                src={post.image}
+                alt="Current post image"
+                class="h-20 w-20 object-cover rounded"
+              />
+            )}
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Content
+          </label>
+          <Editor client:load content={post.content} />
+        </div>
+
+        <div class="flex justify-end space-x-4">
+          <a
+            href="/admin"
+            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+          >
+            Cancel
+          </a>
+          <button
+            type="submit"
+            class="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700"
+          >
+            Update Post
+          </button>
+        </div>
+      </form>
+    </div>
+  </main>
+</Layout>

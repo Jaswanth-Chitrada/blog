@@ -1,0 +1,37 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { storage } from '../../lib/storage';
+import { formatDate } from '../../lib/utils';
+
+const { slug } = Astro.params;
+const post = await storage.getPost(slug || '');
+
+if (!post) {
+  return Astro.redirect('/404');
+}
+---
+
+<Layout title={post.title}>
+  <article class="max-w-4xl mx-auto px-4 py-8">
+    {post.image && (
+      <img
+        src={post.image}
+        alt={post.title}
+        class="w-full h-64 object-cover rounded-lg mb-8"
+      />
+    )}
+    <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+      {post.title}
+    </h1>
+    <time
+      datetime={post.publishedAt}
+      class="text-gray-600 dark:text-gray-400 mb-8 block"
+    >
+      {formatDate(post.publishedAt)}
+    </time>
+    <div
+      class="prose dark:prose-invert max-w-none"
+      set:html={post.content}
+    />
+  </article>
+</Layout>
